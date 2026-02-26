@@ -17,7 +17,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { distributors } from '@/data/dummyData';
+import { suppliers as distributors } from '@/data/dummyData';
 import { formatCurrency } from '@/lib/utils';
 
 export default function Distributors() {
@@ -134,7 +134,7 @@ export default function Distributors() {
                 </div>
               </div>
 
-              {/* Contact & Drug License */}
+              {/* Contact & License */}
               <div className="bg-gray-50 rounded-xl p-3 mb-4 space-y-1">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-500">Contact Person</span>
@@ -142,12 +142,20 @@ export default function Distributors() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-500">Drug License</span>
+                  <span className="font-mono text-xs">{distributor.dlNumber}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">GST No.</span>
                   <span className="font-mono text-xs">{distributor.gstin}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Credit Period</span>
+                  <span className="font-medium">{distributor.creditPeriod} days</span>
                 </div>
               </div>
 
               {/* Stats */}
-              <div className="grid grid-cols-2 gap-3 mb-4">
+              <div className="grid grid-cols-2 gap-3 mb-3">
                 <div className="bg-emerald-50 rounded-xl p-3 text-center">
                   <p className="text-xs text-gray-500">Total Purchases</p>
                   <p className="font-bold text-emerald-600">{formatCurrency(distributor.totalPurchases)}</p>
@@ -157,6 +165,18 @@ export default function Distributors() {
                   <p className={`font-bold ${distributor.pendingDues > 0 ? 'text-red-600' : 'text-green-600'}`}>
                     {distributor.pendingDues > 0 ? formatCurrency(distributor.pendingDues) : 'Nil'}
                   </p>
+                </div>
+              </div>
+
+              {/* Brands */}
+              <div className="mb-3">
+                <p className="text-xs text-gray-500 mb-1">Supplies</p>
+                <div className="flex flex-wrap gap-1">
+                  {distributor.brands.map((brand) => (
+                    <Badge key={brand} variant="outline" className="text-xs border-emerald-200 text-emerald-700">
+                      {brand}
+                    </Badge>
+                  ))}
                 </div>
               </div>
 

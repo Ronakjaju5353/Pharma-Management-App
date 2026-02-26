@@ -3,7 +3,7 @@ import {
   TrendingUp,
   TrendingDown,
   IndianRupee,
-  ShoppingBag,
+  ClipboardList,
   Users,
   CreditCard,
   Package,
@@ -103,8 +103,8 @@ export default function Dashboard() {
                     Avg: {formatCurrency(dashboardStats.avgBillValue)}
                   </p>
                 </div>
-                <div className="h-12 w-12 bg-gradient-to-br from-teal-500 to-purple-500 rounded-xl flex items-center justify-center">
-                  <ShoppingBag className="h-6 w-6 text-white" />
+                <div className="h-12 w-12 bg-gradient-to-br from-teal-500 to-cyan-500 rounded-xl flex items-center justify-center">
+                  <ClipboardList className="h-6 w-6 text-white" />
                 </div>
               </div>
             </CardContent>
@@ -173,12 +173,12 @@ export default function Dashboard() {
                       <stop offset="95%" stopColor="#059669" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#fce7f3" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#d1fae5" />
                   <XAxis dataKey="hour" stroke="#9ca3af" fontSize={12} />
                   <YAxis stroke="#9ca3af" fontSize={12} tickFormatter={(v) => `₹${v/1000}k`} />
                   <Tooltip
                     formatter={(value) => [formatCurrency(value as number), 'Sales']}
-                    contentStyle={{ borderRadius: '12px', border: '1px solid #fce7f3' }}
+                    contentStyle={{ borderRadius: '12px', border: '1px solid #d1fae5' }}
                   />
                   <Area
                     type="monotone"
@@ -197,7 +197,7 @@ export default function Dashboard() {
         <motion.div variants={itemVariants}>
           <Card className="border-emerald-100">
             <CardHeader>
-              <CardTitle>Category Sales</CardTitle>
+              <CardTitle>Medicine Category Sales</CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={200}>
@@ -220,7 +220,7 @@ export default function Dashboard() {
                 </PieChart>
               </ResponsiveContainer>
               <div className="grid grid-cols-2 gap-2 mt-4">
-                {categorySales.slice(0, 4).map((cat) => (
+                {categorySales.slice(0, 6).map((cat) => (
                   <div key={cat.name} className="flex items-center gap-2">
                     <div
                       className="h-3 w-3 rounded-full"
@@ -235,7 +235,7 @@ export default function Dashboard() {
         </motion.div>
       </div>
 
-      {/* Payment Methods & Recent Prescriptions */}
+      {/* Payment Methods & Recent Bills */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Payment Methods */}
         <motion.div variants={itemVariants}>
@@ -246,7 +246,7 @@ export default function Dashboard() {
             <CardContent>
               <ResponsiveContainer width="100%" height={180}>
                 <BarChart data={paymentMethods} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" stroke="#fce7f3" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#d1fae5" />
                   <XAxis type="number" stroke="#9ca3af" fontSize={12} tickFormatter={(v) => `₹${v/1000}k`} />
                   <YAxis type="category" dataKey="name" stroke="#9ca3af" fontSize={12} width={50} />
                   <Tooltip formatter={(value) => [formatCurrency(value as number), 'Amount']} />
@@ -269,12 +269,12 @@ export default function Dashboard() {
           </Card>
         </motion.div>
 
-        {/* Recent Prescriptions */}
+        {/* Recent Bills */}
         <motion.div variants={itemVariants} className="lg:col-span-2">
           <Card className="border-emerald-100">
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
-                <span>Recent Prescriptions</span>
+                <span>Recent Bills</span>
                 <Badge variant="outline" className="border-emerald-200 text-emerald-600">
                   Today
                 </Badge>
@@ -285,7 +285,7 @@ export default function Dashboard() {
                 {recentSales.slice(0, 5).map((sale) => (
                   <div
                     key={sale.id}
-                    className="flex items-center justify-between p-3 bg-gradient-to-r from-emerald-50/50 to-fuchsia-50/50 rounded-xl hover:from-emerald-50 hover:to-fuchsia-50 transition-colors"
+                    className="flex items-center justify-between p-3 bg-gradient-to-r from-emerald-50/50 to-teal-50/50 rounded-xl hover:from-emerald-50 hover:to-teal-50 transition-colors"
                   >
                     <div className="flex items-center gap-3">
                       <div className="h-10 w-10 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-lg flex items-center justify-center text-white font-bold">
@@ -293,7 +293,7 @@ export default function Dashboard() {
                       </div>
                       <div>
                         <p className="font-medium text-gray-900">{sale.customer}</p>
-                        <p className="text-xs text-gray-500">{sale.invoiceNo}</p>
+                        <p className="text-xs text-gray-500">{sale.invoiceNo} | {sale.items} medicines</p>
                       </div>
                     </div>
                     <div className="text-right">
@@ -324,9 +324,9 @@ export default function Dashboard() {
         </motion.div>
       </div>
 
-      {/* Top Products & Low Stock */}
+      {/* Top Medicines & Low Stock / Expiry Alerts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Top Products */}
+        {/* Top Medicines */}
         <motion.div variants={itemVariants}>
           <Card className="border-emerald-100">
             <CardHeader>
@@ -348,7 +348,7 @@ export default function Dashboard() {
                       </div>
                       <div>
                         <p className="font-medium text-gray-900 text-sm">{product.name}</p>
-                        <p className="text-xs text-gray-500">{product.sales} units sold</p>
+                        <p className="text-xs text-gray-500">{product.genericName} | {product.sales} units</p>
                       </div>
                     </div>
                     <div className="text-right">
@@ -371,13 +371,13 @@ export default function Dashboard() {
           </Card>
         </motion.div>
 
-        {/* Low Stock Alerts */}
+        {/* Low Stock & Expiry Alerts */}
         <motion.div variants={itemVariants}>
           <Card className="border-emerald-100">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <AlertTriangle className="h-5 w-5 text-amber-500" />
-                Low Stock Alerts
+                Stock & Expiry Alerts
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -386,9 +386,9 @@ export default function Dashboard() {
                   <div
                     key={item.name}
                     className={`flex items-center justify-between p-3 rounded-xl ${
-                      item.urgency === 'high'
+                      item.urgency === 'critical'
                         ? 'bg-red-50 border border-red-100'
-                        : item.urgency === 'medium'
+                        : item.urgency === 'high'
                         ? 'bg-amber-50 border border-amber-100'
                         : 'bg-gray-50'
                     }`}
@@ -396,16 +396,21 @@ export default function Dashboard() {
                     <div className="flex items-center gap-3">
                       <Package
                         className={`h-5 w-5 ${
-                          item.urgency === 'high'
+                          item.urgency === 'critical'
                             ? 'text-red-500'
-                            : item.urgency === 'medium'
+                            : item.urgency === 'high'
                             ? 'text-amber-500'
                             : 'text-gray-500'
                         }`}
                       />
                       <div>
                         <p className="font-medium text-gray-900 text-sm">{item.name}</p>
-                        <p className="text-xs text-gray-500">{item.category}</p>
+                        <p className="text-xs text-gray-500">
+                          {item.category} | Batch: {item.batchNumber}
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          Exp: {new Date(item.expiryDate).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}
+                        </p>
                       </div>
                     </div>
                     <div className="text-right">
@@ -414,14 +419,14 @@ export default function Dashboard() {
                       </p>
                       <Badge
                         className={`text-xs ${
-                          item.urgency === 'high'
+                          item.urgency === 'critical'
                             ? 'bg-red-100 text-red-700'
-                            : item.urgency === 'medium'
+                            : item.urgency === 'high'
                             ? 'bg-amber-100 text-amber-700'
                             : 'bg-gray-100 text-gray-700'
                         }`}
                       >
-                        {item.urgency === 'high' ? 'Critical' : item.urgency === 'medium' ? 'Low' : 'Reorder'}
+                        {item.urgency === 'critical' ? 'Critical' : item.urgency === 'high' ? 'Low' : 'Reorder'}
                       </Badge>
                     </div>
                   </div>

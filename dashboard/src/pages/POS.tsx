@@ -12,31 +12,37 @@ import {
   Percent,
   ShoppingBag,
   X,
+  Pill,
+  ClipboardList,
+  Shield,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { readyWearProducts, fabricProducts, customers } from '@/data/dummyData';
+import { readyWearProducts as medicines, fabricProducts as prescriptions, customers as patients } from '@/data/dummyData';
 import { formatCurrency } from '@/lib/utils';
 
 interface CartItem {
   id: string;
   name: string;
+  genericName: string;
+  batchNumber: string;
   price: number;
+  gstRate: number;
   quantity: number;
-  type: 'product' | 'fabric';
-  meters?: number;
+  unit: string;
+  schedule: string;
 }
 
 export default function POS() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCustomer, setSelectedCustomer] = useState<typeof customers[0] | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<typeof patients[0] | null>(null);
   const [discount, setDiscount] = useState(0);
 
-  const addToCart = (product: typeof readyWearProducts[0]) => {
+  const addToCart = (product: typeof medicines[0]) => {
     const existing = cart.find((item) => item.id === product.id);
     if (existing) {
       setCart(cart.map((item) =>
@@ -48,45 +54,32 @@ export default function POS() {
       setCart([...cart, {
         id: product.id,
         name: product.name,
+        genericName: product.genericName,
+        batchNumber: product.batchNumber,
         price: product.sellingPrice,
+        gstRate: product.gstRate,
         quantity: 1,
-        type: 'product',
+        unit: product.unit,
+        schedule: product.schedule,
       }]);
     }
   };
 
-  const addPrescriptionToCart = (fabric: typeof fabricProducts[0]) => {
-    const existing = cart.find((item) => item.id === fabric.id);
-    if (existing) {
-      setCart(cart.map((item) =>
-        item.id === fabric.id
-          ? { ...item, meters: (item.meters || 1) + 1 }
-          : item
-      ));
-    } else {
-      setCart([...cart, {
-        id: fabric.id,
-        name: fabric.name,
-        price: fabric.pricePerMeter,
-        quantity: 1,
-        meters: 1,
-        type: 'fabric',
-      }]);
-    }
+  const dispenseRx = (rx: typeof prescriptions[0]) => {
+    rx.medicines.forEach((med) => {
+      const medicine = medicines.find(m => m.name === med.name);
+      if (medicine) {
+        addToCart(medicine);
+      }
+    });
   };
 
   const updateQuantity = (id: string, delta: number) => {
     setCart(cart.map((item) => {
       if (item.id === id) {
-        if (item.type === 'fabric') {
-          const newMeters = (item.meters || 1) + delta;
-          if (newMeters <= 0) return item;
-          return { ...item, meters: newMeters };
-        } else {
-          const newQty = item.quantity + delta;
-          if (newQty <= 0) return item;
-          return { ...item, quantity: newQty };
-        }
+        const newQty = item.quantity + delta;
+        if (newQty <= 0) return item;
+        return { ...item, quantity: newQty };
       }
       return item;
     }));
@@ -96,27 +89,35 @@ export default function POS() {
     setCart(cart.filter((item) => item.id !== id));
   };
 
-  const subtotal = cart.reduce((sum, item) => {
-    if (item.type === 'fabric') {
-      return sum + (item.price * (item.meters || 1));
-    }
-    return sum + (item.price * item.quantity);
-  }, 0);
-
+  const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const discountAmount = (subtotal * discount) / 100;
   const taxable = subtotal - discountAmount;
-  const gst = taxable * 0.12;
+  // Per-item GST calculation
+  const gst = cart.reduce((sum, item) => {
+    const itemTotal = item.price * item.quantity;
+    const itemDiscount = (itemTotal / subtotal) * discountAmount || 0;
+    return sum + ((itemTotal - itemDiscount) * item.gstRate / 100);
+  }, 0);
   const total = taxable + gst;
 
-  const filteredProducts = readyWearProducts.filter((p) =>
+  const filteredMedicines = medicines.filter((p) =>
     p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    p.genericName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     p.sku.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const filteredPrescriptions = fabricProducts.filter((f) =>
-    f.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    f.sku.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredPrescriptions = prescriptions.filter((rx) =>
+    rx.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    rx.rxNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    rx.doctorName.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const getScheduleBadge = (schedule: string) => {
+    if (schedule === 'H' || schedule === 'H1') {
+      return <Badge className="bg-blue-100 text-blue-700 text-[10px] px-1">Rx</Badge>;
+    }
+    return null;
+  };
 
   return (
     <motion.div
@@ -132,7 +133,7 @@ export default function POS() {
             <Search className="h-5 w-5 text-emerald-400" />
             <input
               type="text"
-              placeholder="Search medicines by name or SKU..."
+              placeholder="Search medicines by name, generic name or SKU..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="bg-transparent border-none outline-none text-sm w-full"
@@ -141,39 +142,48 @@ export default function POS() {
           <Button
             variant="outline"
             className="border-emerald-200 hover:bg-emerald-50"
-            onClick={() => setSelectedCustomer(customers[0])}
+            onClick={() => setSelectedCustomer(patients[0])}
           >
             <User className="h-4 w-4 mr-2" />
-            {selectedCustomer ? selectedCustomer.name : 'Select Customer'}
+            {selectedCustomer ? selectedCustomer.name : 'Select Patient'}
           </Button>
         </div>
 
         {/* Product Tabs */}
-        <Tabs defaultValue="products" className="flex-1 flex flex-col">
+        <Tabs defaultValue="medicines" className="flex-1 flex flex-col">
           <TabsList className="bg-emerald-50 p-1">
-            <TabsTrigger value="products" className="data-[state=active]:bg-white">
+            <TabsTrigger value="medicines" className="data-[state=active]:bg-white">
+              <Pill className="h-4 w-4 mr-1" />
               Medicines
             </TabsTrigger>
-            <TabsTrigger value="fabric" className="data-[state=active]:bg-white">
-              Prescription
+            <TabsTrigger value="prescriptions" className="data-[state=active]:bg-white">
+              <ClipboardList className="h-4 w-4 mr-1" />
+              Prescriptions
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="products" className="flex-1 mt-4">
+          <TabsContent value="medicines" className="flex-1 mt-4">
             <ScrollArea className="h-[calc(100vh-300px)]">
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                {filteredProducts.map((product) => (
+                {filteredMedicines.map((product) => (
                   <Card
                     key={product.id}
                     className="cursor-pointer border-emerald-100 hover:border-emerald-300 hover:shadow-md transition-all"
                     onClick={() => addToCart(product)}
                   >
                     <CardContent className="p-3">
-                      <div className="h-20 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-lg flex items-center justify-center mb-2">
-                        <ShoppingBag className="h-8 w-8 text-emerald-400" />
+                      <div className="h-16 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-lg flex items-center justify-center mb-2 relative">
+                        <Pill className="h-7 w-7 text-emerald-400" />
+                        {getScheduleBadge(product.schedule) && (
+                          <div className="absolute top-1 right-1">
+                            {getScheduleBadge(product.schedule)}
+                          </div>
+                        )}
                       </div>
                       <p className="font-medium text-sm text-gray-900 truncate">{product.name}</p>
-                      <p className="text-xs text-gray-500">{product.sku}</p>
+                      <p className="text-xs text-gray-500 truncate">{product.genericName}</p>
+                      <p className="text-xs text-gray-400">{product.manufacturer} | {product.batchNumber}</p>
+                      <p className="text-[10px] text-gray-400">Exp: {new Date(product.expiryDate).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}</p>
                       <div className="flex items-center justify-between mt-2">
                         <span className="font-bold text-emerald-600">{formatCurrency(product.sellingPrice)}</span>
                         <Badge
@@ -181,10 +191,12 @@ export default function POS() {
                           className={`text-xs ${
                             product.stock > product.minStock
                               ? 'border-green-200 text-green-600'
-                              : 'border-red-200 text-red-600'
+                              : product.stock === 0
+                              ? 'border-red-200 text-red-600'
+                              : 'border-amber-200 text-amber-600'
                           }`}
                         >
-                          {product.stock}
+                          {product.stock} {product.unit}
                         </Badge>
                       </div>
                     </CardContent>
@@ -194,27 +206,45 @@ export default function POS() {
             </ScrollArea>
           </TabsContent>
 
-          <TabsContent value="fabric" className="flex-1 mt-4">
+          <TabsContent value="prescriptions" className="flex-1 mt-4">
             <ScrollArea className="h-[calc(100vh-300px)]">
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                {filteredPrescriptions.map((fabric) => (
-                  <Card
-                    key={fabric.id}
-                    className="cursor-pointer border-emerald-100 hover:border-emerald-300 hover:shadow-md transition-all"
-                    onClick={() => addPrescriptionToCart(fabric)}
-                  >
-                    <CardContent className="p-3">
-                      <div className="h-20 bg-gradient-to-br from-teal-100 to-purple-100 rounded-lg flex items-center justify-center mb-2">
-                        <div className="text-2xl">🧵</div>
-                      </div>
-                      <p className="font-medium text-sm text-gray-900 truncate">{fabric.name}</p>
-                      <p className="text-xs text-gray-500">{fabric.type} • {fabric.width}</p>
-                      <div className="flex items-center justify-between mt-2">
-                        <span className="font-bold text-teal-600">{formatCurrency(fabric.pricePerMeter)}/m</span>
-                        <Badge variant="outline" className="text-xs border-purple-200 text-purple-600">
-                          {fabric.totalMeters - fabric.soldMeters}m
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {filteredPrescriptions.filter(rx => rx.status !== 'Dispensed').map((rx) => (
+                  <Card key={rx.id} className="border-emerald-100 hover:border-emerald-300 hover:shadow-md transition-all">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <div>
+                          <p className="font-bold text-emerald-600 text-sm">{rx.rxNumber}</p>
+                          <p className="text-xs text-gray-500">{rx.date}</p>
+                        </div>
+                        <Badge className={rx.status === 'Pending' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}>
+                          {rx.status}
                         </Badge>
                       </div>
+                      <div className="flex justify-between mb-2">
+                        <div>
+                          <p className="font-semibold text-sm">{rx.patientName}</p>
+                          <p className="text-xs text-gray-500">{rx.patientGender}, {rx.patientAge} yrs</p>
+                        </div>
+                        <p className="text-xs text-gray-500">{rx.doctorName}</p>
+                      </div>
+                      <div className="bg-gray-50 rounded-lg p-2 mb-3 space-y-1">
+                        {rx.medicines.map((med, idx) => (
+                          <div key={idx} className="flex items-center gap-2 text-xs">
+                            <span className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-[10px] font-bold">{idx + 1}</span>
+                            <span className="text-gray-700">{med.name}</span>
+                            <span className="text-gray-400">— {med.dosage}, {med.duration}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <Button
+                        size="sm"
+                        className="w-full bg-gradient-to-r from-emerald-500 to-teal-500"
+                        onClick={() => dispenseRx(rx)}
+                      >
+                        <ShoppingBag className="h-3 w-3 mr-1" />
+                        {rx.status === 'Partial' ? 'Add Remaining to Bill' : 'Add to Bill'}
+                      </Button>
                     </CardContent>
                   </Card>
                 ))}
@@ -231,13 +261,24 @@ export default function POS() {
             <span>Current Bill</span>
             <Badge className="bg-emerald-500">{cart.length} items</Badge>
           </CardTitle>
+          {selectedCustomer && (
+            <div className="flex items-center justify-between text-sm mt-1">
+              <span className="text-gray-500">Patient: <strong>{selectedCustomer.name}</strong></span>
+              {selectedCustomer.allergies.length > 0 && (
+                <Badge className="bg-red-100 text-red-700 text-xs">
+                  <Shield className="h-3 w-3 mr-1" />
+                  Allergies
+                </Badge>
+              )}
+            </div>
+          )}
         </CardHeader>
 
         <ScrollArea className="flex-1 p-4">
           {cart.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-40 text-gray-400">
               <ShoppingBag className="h-12 w-12 mb-2" />
-              <p>No items in cart</p>
+              <p>No items in bill</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -248,8 +289,8 @@ export default function POS() {
                 >
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm text-gray-900 truncate">{item.name}</p>
-                    <p className="text-xs text-gray-500">
-                      {formatCurrency(item.price)} {item.type === 'fabric' ? '/m' : ''}
+                    <p className="text-[10px] text-gray-400">
+                      {item.batchNumber} | GST {item.gstRate}%
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
@@ -262,7 +303,7 @@ export default function POS() {
                       <Minus className="h-3 w-3" />
                     </Button>
                     <span className="w-8 text-center font-medium">
-                      {item.type === 'fabric' ? `${item.meters}m` : item.quantity}
+                      {item.quantity}
                     </span>
                     <Button
                       size="icon"
@@ -314,7 +355,7 @@ export default function POS() {
               </div>
             )}
             <div className="flex justify-between">
-              <span className="text-gray-500">GST (12%)</span>
+              <span className="text-gray-500">GST (Mixed rates)</span>
               <span>{formatCurrency(gst)}</span>
             </div>
             <div className="flex justify-between font-bold text-lg pt-2 border-t border-emerald-100">

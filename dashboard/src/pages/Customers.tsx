@@ -5,7 +5,6 @@ import {
   Plus,
   Phone,
   Mail,
-  Gift,
   CreditCard,
   TrendingUp,
   Users,
@@ -13,12 +12,15 @@ import {
   Edit2,
   Eye,
   MessageSquare,
+  AlertTriangle,
+  Heart,
+  FileText,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { patients } from '@/data/dummyData';
+import { customers as patients } from '@/data/dummyData';
 import { formatCurrency, formatDate } from '@/lib/utils';
 
 export default function Patients() {
@@ -30,9 +32,34 @@ export default function Patients() {
   );
 
   const totalPatients = patients.length;
-  const totalLoyaltyPoints = patients.reduce((sum, c) => sum + c.loyaltyPoints, 0);
+  const activePatients = patients.filter(p => {
+    const daysSince = Math.floor((Date.now() - new Date(p.lastVisit).getTime()) / (1000 * 60 * 60 * 24));
+    return daysSince <= 30;
+  }).length;
   const totalCredit = patients.reduce((sum, c) => sum + c.creditBalance, 0);
   const totalRevenue = patients.reduce((sum, c) => sum + c.totalPurchases, 0);
+
+  const getPatientBadge = (patient: typeof patients[0]) => {
+    if (patient.patientType === 'Regular') {
+      return (
+        <Badge className="bg-gradient-to-r from-amber-400 to-yellow-500 text-white">
+          <Star className="h-3 w-3 mr-1" />
+          Regular
+        </Badge>
+      );
+    } else if (patient.patientType === 'Walk-in') {
+      return (
+        <Badge className="bg-gradient-to-r from-gray-400 to-gray-500 text-white">
+          Walk-in
+        </Badge>
+      );
+    }
+    return (
+      <Badge className="bg-gradient-to-r from-emerald-400 to-teal-500 text-white">
+        New
+      </Badge>
+    );
+  };
 
   return (
     <motion.div
@@ -56,12 +83,12 @@ export default function Patients() {
 
         <Card className="border-emerald-100">
           <CardContent className="p-4 flex items-center gap-4">
-            <div className="h-12 w-12 bg-gradient-to-br from-teal-500 to-purple-500 rounded-xl flex items-center justify-center">
-              <Gift className="h-6 w-6 text-white" />
+            <div className="h-12 w-12 bg-gradient-to-br from-teal-500 to-cyan-500 rounded-xl flex items-center justify-center">
+              <FileText className="h-6 w-6 text-white" />
             </div>
             <div>
-              <p className="text-sm text-gray-500">Total Points</p>
-              <p className="text-2xl font-bold">{totalLoyaltyPoints.toLocaleString()}</p>
+              <p className="text-sm text-gray-500">Active (30 days)</p>
+              <p className="text-2xl font-bold text-teal-600">{activePatients}</p>
             </div>
           </CardContent>
         </Card>
@@ -124,6 +151,9 @@ export default function Patients() {
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-gray-900">{patient.name}</h3>
+                  <div className="text-xs text-gray-500">
+                    {patient.age} yrs | {patient.gender} | {patient.bloodGroup}
+                  </div>
                   <div className="flex items-center gap-1 text-sm text-gray-500">
                     <Phone className="h-3 w-3" />
                     {patient.phone}
@@ -133,44 +163,56 @@ export default function Patients() {
                     {patient.email}
                   </div>
                 </div>
-                <Badge
-                  className={
-                    patient.totalPurchases >= 100000
-                      ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-white'
-                      : patient.totalPurchases >= 50000
-                      ? 'bg-gradient-to-r from-gray-400 to-gray-500 text-white'
-                      : 'bg-gradient-to-r from-amber-600 to-amber-700 text-white'
-                  }
-                >
-                  <Star className="h-3 w-3 mr-1" />
-                  {patient.totalPurchases >= 100000 ? 'Regular' : patient.totalPurchases >= 50000 ? 'Walk-in' : 'New'}
-                </Badge>
+                {getPatientBadge(patient)}
               </div>
 
               {/* Stats */}
-              <div className="grid grid-cols-2 gap-3 mb-4">
+              <div className="grid grid-cols-2 gap-3 mb-3">
                 <div className="bg-emerald-50 rounded-xl p-3 text-center">
                   <p className="text-xs text-gray-500">Total Purchases</p>
                   <p className="font-bold text-emerald-600">{formatCurrency(patient.totalPurchases)}</p>
                 </div>
-                <div className="bg-fuchsia-50 rounded-xl p-3 text-center">
+                <div className="bg-teal-50 rounded-xl p-3 text-center">
                   <p className="text-xs text-gray-500">Prescriptions</p>
-                  <p className="font-bold text-teal-600">{patient.loyaltyPoints}</p>
+                  <p className="font-bold text-teal-600">{patient.prescriptionCount}</p>
                 </div>
               </div>
 
-              {/* Credit */}
-              {patient.creditBalance > 0 && (
-                <div className="bg-amber-50 rounded-xl p-3 mb-4 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <CreditCard className="h-4 w-4 text-amber-600" />
-                    <span className="text-sm text-amber-700">Credit Balance</span>
-                  </div>
-                  <span className="font-bold text-amber-600">{formatCurrency(patient.creditBalance)}</span>
+              {/* Allergies */}
+              {patient.allergies && patient.allergies.length > 0 ? (
+                <div className="bg-red-50 rounded-xl p-2 mb-2 flex items-center gap-2">
+                  <AlertTriangle className="h-3.5 w-3.5 text-red-500 flex-shrink-0" />
+                  <span className="text-xs text-red-700">
+                    Allergies: <strong>{patient.allergies.join(', ')}</strong>
+                  </span>
+                </div>
+              ) : (
+                <div className="bg-green-50 rounded-xl p-2 mb-2 flex items-center gap-2">
+                  <span className="text-xs text-green-700">✅ No known allergies</span>
                 </div>
               )}
 
-              {/* Last Visit */}
+              {/* Chronic Conditions */}
+              {patient.chronicConditions && patient.chronicConditions.length > 0 && (
+                <div className="bg-amber-50 rounded-xl p-2 mb-2 flex items-center gap-2">
+                  <Heart className="h-3.5 w-3.5 text-amber-500 flex-shrink-0" />
+                  <span className="text-xs text-amber-700">
+                    {patient.chronicConditions.join(', ')}
+                  </span>
+                </div>
+              )}
+
+              {/* Credit & Last Visit */}
+              {patient.creditBalance > 0 && (
+                <div className="bg-amber-50 rounded-xl p-2 mb-2 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <CreditCard className="h-3.5 w-3.5 text-amber-600" />
+                    <span className="text-xs text-amber-700">Credit Balance</span>
+                  </div>
+                  <span className="font-bold text-xs text-amber-600">{formatCurrency(patient.creditBalance)}</span>
+                </div>
+              )}
+
               <p className="text-xs text-gray-500 mb-4">
                 Last visit: {formatDate(patient.lastVisit)}
               </p>

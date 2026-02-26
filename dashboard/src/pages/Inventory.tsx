@@ -11,30 +11,65 @@ import {
   TrendingUp,
   AlertTriangle,
   Eye,
+  Clock,
+  Shield,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { readyWearProducts } from '@/data/dummyData';
+import { readyWearProducts as medicines } from '@/data/dummyData';
 import { formatCurrency } from '@/lib/utils';
 
 export default function Inventory() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
 
-  const categories = ['all', ...new Set(readyWearProducts.map((p) => p.category))];
+  const categories = ['all', ...new Set(medicines.map((p) => p.category))];
 
-  const filteredProducts = readyWearProducts.filter((product) => {
+  const filteredProducts = medicines.filter((product) => {
     const matchesSearch =
       product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.batchNo.toLowerCase().includes(searchTerm.toLowerCase());
+      product.genericName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.batchNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.manufacturer.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
-  const totalStock = readyWearProducts.reduce((sum, p) => sum + p.stock, 0);
-  const totalValue = readyWearProducts.reduce((sum, p) => sum + (p.costPrice * p.stock), 0);
-  const lowStockItems = readyWearProducts.filter((p) => p.stock <= p.minStock).length;
+  const totalStock = medicines.reduce((sum, p) => sum + p.stock, 0);
+  const totalValue = medicines.reduce((sum, p) => sum + (p.costPrice * p.stock), 0);
+  const lowStockItems = medicines.filter((p) => p.stock <= p.minStock).length;
+
+  const now = new Date();
+  const threeMonths = new Date(now.getFullYear(), now.getMonth() + 3, now.getDate());
+  const expiredItems = medicines.filter((p) => new Date(p.expiryDate) < now).length;
+  const nearExpiryItems = medicines.filter((p) => {
+    const exp = new Date(p.expiryDate);
+    return exp >= now && exp <= threeMonths;
+  }).length;
+
+  const getExpiryBadge = (expiryDate: string) => {
+    const exp = new Date(expiryDate);
+    const sixMonths = new Date(now.getFullYear(), now.getMonth() + 6, now.getDate());
+
+    if (exp < now) {
+      return <Badge className="bg-red-100 text-red-700">Expired</Badge>;
+    } else if (exp <= threeMonths) {
+      return <Badge className="bg-red-100 text-red-700">Exp Soon</Badge>;
+    } else if (exp <= sixMonths) {
+      return <Badge className="bg-amber-100 text-amber-700">Exp &lt;6m</Badge>;
+    }
+    return <span className="text-gray-600 text-sm">{exp.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}</span>;
+  };
+
+  const getScheduleBadge = (schedule: string) => {
+    switch (schedule) {
+      case 'H': return <Badge className="bg-blue-100 text-blue-700 text-xs">Sch H</Badge>;
+      case 'H1': return <Badge className="bg-purple-100 text-purple-700 text-xs">Sch H1</Badge>;
+      case 'X': return <Badge className="bg-red-100 text-red-700 text-xs">Sch X</Badge>;
+      default: return <Badge className="bg-green-100 text-green-700 text-xs">OTC</Badge>;
+    }
+  };
 
   return (
     <motion.div
@@ -43,7 +78,7 @@ export default function Inventory() {
       className="space-y-6"
     >
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <Card className="border-emerald-100">
           <CardContent className="p-4 flex items-center gap-4">
             <div className="h-12 w-12 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center">
@@ -51,31 +86,31 @@ export default function Inventory() {
             </div>
             <div>
               <p className="text-sm text-gray-500">Total Medicines</p>
-              <p className="text-2xl font-bold">{readyWearProducts.length}</p>
+              <p className="text-2xl font-bold">{medicines.length}</p>
             </div>
           </CardContent>
         </Card>
 
         <Card className="border-emerald-100">
           <CardContent className="p-4 flex items-center gap-4">
-            <div className="h-12 w-12 bg-gradient-to-br from-teal-500 to-purple-500 rounded-xl flex items-center justify-center">
+            <div className="h-12 w-12 bg-gradient-to-br from-teal-500 to-cyan-500 rounded-xl flex items-center justify-center">
               <TrendingUp className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Total Stock</p>
-              <p className="text-2xl font-bold">{totalStock} units</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-emerald-100">
-          <CardContent className="p-4 flex items-center gap-4">
-            <div className="h-12 w-12 bg-gradient-to-br from-purple-500 to-emerald-500 rounded-xl flex items-center justify-center">
-              <span className="text-white font-bold">₹</span>
             </div>
             <div>
               <p className="text-sm text-gray-500">Stock Value</p>
               <p className="text-2xl font-bold">{formatCurrency(totalValue)}</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-emerald-100">
+          <CardContent className="p-4 flex items-center gap-4">
+            <div className="h-12 w-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center">
+              <Shield className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">In Stock</p>
+              <p className="text-2xl font-bold text-green-600">{totalStock} units</p>
             </div>
           </CardContent>
         </Card>
@@ -91,22 +126,34 @@ export default function Inventory() {
             </div>
           </CardContent>
         </Card>
+
+        <Card className="border-emerald-100">
+          <CardContent className="p-4 flex items-center gap-4">
+            <div className="h-12 w-12 bg-gradient-to-br from-red-500 to-rose-500 rounded-xl flex items-center justify-center">
+              <Clock className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Near Expiry</p>
+              <p className="text-2xl font-bold text-red-600">{nearExpiryItems + expiredItems}</p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Actions Bar */}
       <div className="flex flex-wrap gap-3 items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 bg-white rounded-xl px-4 py-2 border border-emerald-100 w-64">
+          <div className="flex items-center gap-2 bg-white rounded-xl px-4 py-2 border border-emerald-100 w-72">
             <Search className="h-4 w-4 text-emerald-400" />
             <input
               type="text"
-              placeholder="Search medicines..."
+              placeholder="Search name, generic, batch, mfg..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="bg-transparent border-none outline-none text-sm w-full"
             />
           </div>
-          <div className="flex items-center gap-1 bg-white rounded-xl p-1 border border-emerald-100">
+          <div className="flex items-center gap-1 bg-white rounded-xl p-1 border border-emerald-100 overflow-x-auto">
             {categories.map((cat) => (
               <Button
                 key={cat}
@@ -115,7 +162,7 @@ export default function Inventory() {
                 onClick={() => setSelectedCategory(cat)}
                 className={selectedCategory === cat ? 'bg-emerald-500' : ''}
               >
-                {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                {cat === 'all' ? 'All' : cat}
               </Button>
             ))}
           </div>
@@ -137,18 +184,20 @@ export default function Inventory() {
         </div>
       </div>
 
-      {/* Products Table */}
+      {/* Medicines Table */}
       <Card className="border-emerald-100">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-emerald-50">
                 <tr>
-                  <th className="text-left p-4 font-medium text-gray-600">Product</th>
-                  <th className="text-left p-4 font-medium text-gray-600">Batch No</th>
+                  <th className="text-left p-4 font-medium text-gray-600">Medicine</th>
+                  <th className="text-left p-4 font-medium text-gray-600">Batch</th>
+                  <th className="text-left p-4 font-medium text-gray-600">Expiry</th>
                   <th className="text-left p-4 font-medium text-gray-600">Category</th>
+                  <th className="text-center p-4 font-medium text-gray-600">Schedule</th>
                   <th className="text-right p-4 font-medium text-gray-600">MRP</th>
-                  <th className="text-right p-4 font-medium text-gray-600">Selling Price</th>
+                  <th className="text-right p-4 font-medium text-gray-600">Sell Price</th>
                   <th className="text-center p-4 font-medium text-gray-600">Stock</th>
                   <th className="text-center p-4 font-medium text-gray-600">Status</th>
                   <th className="text-center p-4 font-medium text-gray-600">Actions</th>
@@ -164,17 +213,25 @@ export default function Inventory() {
                         </div>
                         <div>
                           <p className="font-medium text-gray-900">{product.name}</p>
-                          <p className="text-xs text-gray-500">{product.brand} • {product.color}</p>
+                          <p className="text-xs text-gray-500">{product.genericName} | {product.manufacturer}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="p-4 text-gray-600">{product.batchNo}</td>
+                    <td className="p-4">
+                      <span className="font-mono text-sm text-gray-600">{product.batchNumber}</span>
+                    </td>
+                    <td className="p-4">
+                      {getExpiryBadge(product.expiryDate)}
+                    </td>
                     <td className="p-4">
                       <Badge variant="outline" className="border-emerald-200 text-emerald-600">
                         {product.category}
                       </Badge>
                     </td>
-                    <td className="p-4 text-right text-gray-500 line-through">
+                    <td className="p-4 text-center">
+                      {getScheduleBadge(product.schedule)}
+                    </td>
+                    <td className="p-4 text-right text-gray-500 line-through text-sm">
                       {formatCurrency(product.mrp)}
                     </td>
                     <td className="p-4 text-right font-medium text-emerald-600">
@@ -184,7 +241,8 @@ export default function Inventory() {
                       <span className={`font-medium ${product.stock <= product.minStock ? 'text-red-600' : 'text-gray-900'}`}>
                         {product.stock}
                       </span>
-                      <span className="text-gray-400 text-xs"> / {product.minStock}</span>
+                      <span className="text-gray-400 text-xs"> {product.unit}</span>
+                      <div className="text-xs text-gray-400">Min: {product.minStock}</div>
                     </td>
                     <td className="p-4 text-center">
                       <Badge
