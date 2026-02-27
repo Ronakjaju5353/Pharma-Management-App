@@ -143,7 +143,7 @@ export default function Inventory() {
       {/* Actions Bar */}
       <div className="flex flex-wrap gap-3 items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 bg-white rounded-xl px-4 py-2 border border-emerald-100 w-72">
+          <div className="flex items-center gap-2 bg-white rounded-xl px-4 py-2 border border-emerald-100 w-full sm:w-72">
             <Search className="h-4 w-4 text-emerald-400" />
             <input
               type="text"
@@ -191,60 +191,60 @@ export default function Inventory() {
             <table className="w-full">
               <thead className="bg-emerald-50">
                 <tr>
-                  <th className="text-left p-4 font-medium text-gray-600">Medicine</th>
-                  <th className="text-left p-4 font-medium text-gray-600">Batch</th>
-                  <th className="text-left p-4 font-medium text-gray-600">Expiry</th>
-                  <th className="text-left p-4 font-medium text-gray-600">Category</th>
-                  <th className="text-center p-4 font-medium text-gray-600">Schedule</th>
-                  <th className="text-right p-4 font-medium text-gray-600">MRP</th>
-                  <th className="text-right p-4 font-medium text-gray-600">Sell Price</th>
-                  <th className="text-center p-4 font-medium text-gray-600">Stock</th>
-                  <th className="text-center p-4 font-medium text-gray-600">Status</th>
-                  <th className="text-center p-4 font-medium text-gray-600">Actions</th>
+                  <th className="text-left p-3 sm:p-4 font-medium text-gray-600">Medicine</th>
+                  <th className="text-left p-3 sm:p-4 font-medium text-gray-600 hidden lg:table-cell">Batch</th>
+                  <th className="text-left p-3 sm:p-4 font-medium text-gray-600 hidden md:table-cell">Expiry</th>
+                  <th className="text-left p-3 sm:p-4 font-medium text-gray-600 hidden xl:table-cell">Category</th>
+                  <th className="text-center p-3 sm:p-4 font-medium text-gray-600 hidden xl:table-cell">Schedule</th>
+                  <th className="text-right p-3 sm:p-4 font-medium text-gray-600 hidden lg:table-cell">MRP</th>
+                  <th className="text-right p-3 sm:p-4 font-medium text-gray-600">Price</th>
+                  <th className="text-center p-3 sm:p-4 font-medium text-gray-600">Stock</th>
+                  <th className="text-center p-3 sm:p-4 font-medium text-gray-600 hidden sm:table-cell">Status</th>
+                  <th className="text-center p-3 sm:p-4 font-medium text-gray-600">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-emerald-100">
                 {filteredProducts.map((product) => (
                   <tr key={product.id} className="hover:bg-emerald-50/50 transition-colors">
-                    <td className="p-4">
+                    <td className="p-3 sm:p-4">
                       <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-lg flex items-center justify-center">
+                        <div className="h-10 w-10 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-lg flex items-center justify-center shrink-0 hidden sm:flex">
                           <Package className="h-5 w-5 text-emerald-500" />
                         </div>
                         <div>
-                          <p className="font-medium text-gray-900">{product.name}</p>
-                          <p className="text-xs text-gray-500">{product.genericName} | {product.manufacturer}</p>
+                          <p className="font-medium text-gray-900 text-sm">{product.name}</p>
+                          <p className="text-xs text-gray-500">{product.genericName}</p>
+                          <p className="text-xs text-gray-400 md:hidden">{product.batchNumber}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="p-4">
+                    <td className="p-3 sm:p-4 hidden lg:table-cell">
                       <span className="font-mono text-sm text-gray-600">{product.batchNumber}</span>
                     </td>
-                    <td className="p-4">
+                    <td className="p-3 sm:p-4 hidden md:table-cell">
                       {getExpiryBadge(product.expiryDate)}
                     </td>
-                    <td className="p-4">
+                    <td className="p-3 sm:p-4 hidden xl:table-cell">
                       <Badge variant="outline" className="border-emerald-200 text-emerald-600">
                         {product.category}
                       </Badge>
                     </td>
-                    <td className="p-4 text-center">
+                    <td className="p-3 sm:p-4 text-center hidden xl:table-cell">
                       {getScheduleBadge(product.schedule)}
                     </td>
-                    <td className="p-4 text-right text-gray-500 line-through text-sm">
+                    <td className="p-3 sm:p-4 text-right text-gray-500 line-through text-sm hidden lg:table-cell">
                       {formatCurrency(product.mrp)}
                     </td>
-                    <td className="p-4 text-right font-medium text-emerald-600">
+                    <td className="p-3 sm:p-4 text-right font-medium text-emerald-600">
                       {formatCurrency(product.sellingPrice)}
                     </td>
-                    <td className="p-4 text-center">
+                    <td className="p-3 sm:p-4 text-center">
                       <span className={`font-medium ${product.stock <= product.minStock ? 'text-red-600' : 'text-gray-900'}`}>
                         {product.stock}
                       </span>
                       <span className="text-gray-400 text-xs"> {product.unit}</span>
-                      <div className="text-xs text-gray-400">Min: {product.minStock}</div>
                     </td>
-                    <td className="p-4 text-center">
+                    <td className="p-3 sm:p-4 text-center hidden sm:table-cell">
                       <Badge
                         className={
                           product.stock === 0
@@ -257,7 +257,7 @@ export default function Inventory() {
                         {product.stock === 0 ? 'Out of Stock' : product.stock <= product.minStock ? 'Low Stock' : 'In Stock'}
                       </Badge>
                     </td>
-                    <td className="p-4">
+                    <td className="p-3 sm:p-4">
                       <div className="flex items-center justify-center gap-1">
                         <Button size="icon" variant="ghost" className="h-8 w-8 hover:bg-emerald-50">
                           <Eye className="h-4 w-4 text-gray-500" />

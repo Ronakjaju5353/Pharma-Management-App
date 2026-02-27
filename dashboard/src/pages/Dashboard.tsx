@@ -219,7 +219,7 @@ export default function Dashboard() {
                   <Tooltip formatter={(value) => [`${value}%`, 'Share']} />
                 </PieChart>
               </ResponsiveContainer>
-              <div className="grid grid-cols-2 gap-2 mt-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-4">
                 {categorySales.slice(0, 6).map((cat) => (
                   <div key={cat.name} className="flex items-center gap-2">
                     <div
@@ -257,7 +257,7 @@ export default function Dashboard() {
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
-              <div className="grid grid-cols-2 gap-2 mt-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-4">
                 {paymentMethods.map((pm) => (
                   <div key={pm.name} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
                     <span className="text-xs text-gray-600">{pm.name}</span>

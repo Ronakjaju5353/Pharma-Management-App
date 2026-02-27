@@ -106,7 +106,7 @@ export default function Fabric() {
       {/* Actions Bar */}
       <div className="flex flex-wrap gap-3 items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 bg-white rounded-xl px-4 py-2 border border-emerald-100 w-64">
+          <div className="flex items-center gap-2 bg-white rounded-xl px-4 py-2 border border-emerald-100 w-full sm:w-64">
             <Search className="h-4 w-4 text-emerald-400" />
             <input
               type="text"

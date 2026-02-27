@@ -123,12 +123,12 @@ export default function POS() {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="h-[calc(100vh-140px)] flex gap-4"
+      className="h-[calc(100vh-140px)] flex flex-col lg:flex-row gap-4"
     >
       {/* Products Section */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-h-0">
         {/* Search */}
-        <div className="mb-4 flex gap-3">
+        <div className="mb-4 flex flex-col sm:flex-row gap-3">
           <div className="flex-1 flex items-center gap-2 bg-white rounded-xl px-4 py-2 border border-emerald-100">
             <Search className="h-5 w-5 text-emerald-400" />
             <input
@@ -141,7 +141,7 @@ export default function POS() {
           </div>
           <Button
             variant="outline"
-            className="border-emerald-200 hover:bg-emerald-50"
+            className="border-emerald-200 hover:bg-emerald-50 w-full sm:w-auto"
             onClick={() => setSelectedCustomer(patients[0])}
           >
             <User className="h-4 w-4 mr-2" />
@@ -255,7 +255,7 @@ export default function POS() {
       </div>
 
       {/* Cart Section */}
-      <Card className="w-96 flex flex-col border-emerald-100">
+      <Card className="w-full lg:w-96 flex flex-col border-emerald-100 min-h-[300px] lg:min-h-0">
         <CardHeader className="pb-3 border-b border-emerald-100">
           <CardTitle className="flex items-center justify-between">
             <span>Current Bill</span>
@@ -365,7 +365,7 @@ export default function POS() {
           </div>
 
           {/* Payment Buttons */}
-          <div className="grid grid-cols-3 gap-2 pt-2">
+          <div className="grid grid-cols-3 gap-2 pt-2 text-xs sm:text-sm">
             <Button className="bg-green-500 hover:bg-green-600">
               <Banknote className="h-4 w-4 mr-1" />
               Cash

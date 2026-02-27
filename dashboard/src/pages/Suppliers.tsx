@@ -40,7 +40,7 @@ export default function Distributors() {
       className="space-y-6"
     >
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <Card className="border-emerald-100">
           <CardContent className="p-4 flex items-center gap-4">
             <div className="h-12 w-12 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center">
@@ -92,7 +92,7 @@ export default function Distributors() {
 
       {/* Actions Bar */}
       <div className="flex flex-wrap gap-3 items-center justify-between">
-        <div className="flex items-center gap-2 bg-white rounded-xl px-4 py-2 border border-emerald-100 w-80">
+        <div className="flex items-center gap-2 bg-white rounded-xl px-4 py-2 border border-emerald-100 w-full sm:w-80">
           <Search className="h-4 w-4 text-emerald-400" />
           <input
             type="text"

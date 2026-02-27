@@ -52,7 +52,7 @@ export default function Reports() {
           <h2 className="text-xl font-bold text-gray-900">Reports & Analytics</h2>
           <p className="text-sm text-gray-500">Track your business performance</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button variant="outline" className="border-emerald-200">
             <Calendar className="h-4 w-4 mr-2" />
             Date Range
@@ -304,7 +304,7 @@ export default function Reports() {
               <CardTitle>GST Summary - Today</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-5 gap-4">
                 <div className="bg-emerald-50 rounded-xl p-4 text-center">
                   <p className="text-sm text-gray-500">Taxable Amount</p>
                   <p className="text-2xl font-bold text-emerald-600">{formatCurrency(gstSummary.totalTaxable)}</p>
